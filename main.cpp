@@ -59,9 +59,7 @@ struct AFN{
     }
 
     pair<int*, int> statelist (int stateI, string vale);
-
-    // int* state_state(int state, string v);
-    // void substring(string s);
+    void substring(string s);
 };
 
 
@@ -82,18 +80,11 @@ class queue{
             array = new T[sz];
             front = rear = -1;
         }
-        ~queue(){
-            delete[] array;
-        }
-        T _rear(){
-            return array[rear];
-        }
-        T _front(){
-            array[front];
-        }
-        void resize(int &cap, int newcap){
-            resize(array, capacity, capacity*2);
-        }
+        ~queue(){delete[] array;}
+        T _size(){return size;}
+        T _rear(){return array[rear];}
+        T _front(){return array[front];}
+        void resize(int &cap, int newcap){resize(array, capacity, capacity*2);}
         void push(T value){
             if (rear==capacity-1){
                 this->resize(capacity, capacity*2);
@@ -118,9 +109,7 @@ class queue{
             rear--;
             size--;
         }
-        T* operator*(){
-            return array;
-        }
+        T* operator*(){return array;}
     private:
         void resize(T *array, int &cap, int newcap){
             T* new_array = new T[newcap];
@@ -136,7 +125,6 @@ pair<int*, int> AFN::statelist (int stateI, string value){
 
     if(stateI == 1){
         int contSizereturn = 1;
-        
         for (auto i : this->root.ts){
             if(value == string(1, i)){
                 contSizereturn += 1;
@@ -155,71 +143,98 @@ pair<int*, int> AFN::statelist (int stateI, string value){
         }
     }
     else{
-        for (int i = 0; i < this->root.ts.size(); i++){
-            if(stateI == root.nextStateArr[i].nameState){
-                retorno = new int[1];
+        retorno = new int[1];
+        size = 1;
 
-                if(value == root.nextStateArr[i].t){
-                    retorno[0] = stateI+1;
-                    size = 1;
-                }
-                else{
-                    retorno[0] = 0;
-                    size = 1;
-                }
+        auto iter1 = this->root.nextStateArr;
+        auto iter2 = this->root.nextStateArr;
 
-                break;
+        while (true){
+            if(iter1->nameState==stateI){break;}
+            iter1 = iter1->nextState;
+            if(iter1->nextState == nullptr){
+                iter2 = iter2+1;
+                iter1 = iter2;
             }
-
-            else if(stateI < root.nextStateArr[i].nameState){
-                retorno = new int[1];
-
-                auto iter = this->root.nextStateArr+i-1;
-                for (int j = 0; j < (stateI - iter->nameState); j++){
-                    iter = iter->nextState;
-                }
-
-                if(value == iter->t){
-                    retorno[0] = stateI+1;
-                    size = 1;
-                }
-                else{
-                    retorno[0] = 0;
-                    size = 1;
-                }
-
-                break;
-            }
+        }
+        
+        if(value == iter1->t){
+            retorno[0] = stateI+1;
+            size = 1;
+        }
+        else{
+            retorno[0] = 0;
+            size = 1;
         }
     }
 
     return {retorno, size};
 }
 
+void AFN::substring(string s){
+    int* FinallySteishon = new int[this->root.ts.size()]; 
+    for (int i = 0; i < this->root.ts.size(); i++){
+        auto Iter = root.nextStateArr+i;
+        while (true){
+            if (Iter->nextState==nullptr){
+                FinallySteishon[i] = Iter->nameState;
+                break;
+            }
+            Iter= Iter->nextState;
+        }
+    }
+    
+    queue<int> q((s.size())*2);
+    queue<int> h((s.size())*2);
+
+    bool loop=true;
+
+    q.push(1);
+    for (int i = 0; i < s.size(); i++){
+        int size_q = q._size();
+        for (int j = 0; j < size_q; j++){
+            h.push(q._front());
+            q.pop();
+            pair<int*,int> states_s = statelist(h._front(),string(1,s[i]));
+            for (int k = 0; k < states_s.second; k++){
+                if (states_s.first[k] != 0){
+                    q.push(states_s.first[k]);
+                }
+            }
+            h.pop();
+        }
+
+        auto iter = *q;
+        for (int l = 0; l < q._size(); l++){
+            for (int m = 0; m < this->root.ts.size(); m++){
+                if (*(iter+l) == FinallySteishon[m]){
+                    loop = false;
+                    cout << "YES" << endl;
+                    break;
+                }
+            }
+            if (loop == false){break;}
+        }
+        if(loop == false) {break;}
+        if (s.size()-1 == i){cout << "NO" << endl;}
+    }
+}
+
+
+
+// MAIN
 
 int main(){
-    string arrstr[] = {"aaa", "bbb"};
-    string x = "abcde";
-
-
-
-    string y ;
-    y = arrstr[0][0];
-
-    int size = 2;
+    int size = 3;
     string *arrString;
     arrString = new string[size];
-    arrString[0] = "web";
-    arrString[1] = "ebay";
+    arrString[0] = "return0;";
+    arrString[1] = "#ifdef";
+    arrString[2] = "while(true)";
 
-    AFN prueba("abcdefghijklmnopqrstuvwxyz", size, arrString);
+    AFN prueba("1234567890=()[]{};+-*/#abcdefghijklmnopqrstuvwxyz", size, arrString);
 
-    pair<int*, int> xd = prueba.statelist(1, "e");
-
-    cout << xd.second << endl;
-    
-    for (int i = 0; i < xd.second; i++)
-    {
-        cout << xd.first[i];
-    }
+    prueba.substring("fill_matrix");
+    prueba.substring("ifn=5");
+    prueba.substring("return0;abcd");
 }
